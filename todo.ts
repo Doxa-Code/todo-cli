@@ -12,25 +12,25 @@ const TODO_FILE = resolve(`${process.cwd()}/todo.md`);
 const createTodoFile = () => {
 	if (!fs.existsSync(TODO_FILE)) {
 		fs.writeFileSync(TODO_FILE, "# Todo`s\n\n");
-		console.log("Arquivo todo.md criado.");
+		console.log("Arquivo todo.md criado.\n");
 	}
 };
 
 // Função para adicionar uma tarefa ao arquivo todo.md
 const addTask = (task: string) => {
 	if (!task) {
-		console.log("Por favor, forneça uma tarefa para adicionar.");
+		console.log("Por favor, forneça uma tarefa para adicionar.\n");
 		return;
 	}
 
 	// Adiciona a tarefa no arquivo todo.md
 	fs.appendFileSync(TODO_FILE, `- [ ] ${task}\n`);
-	console.log(`Tarefa '${task}' adicionada com sucesso.`);
+	console.log(`Tarefa '${task}' adicionada com sucesso.\n`);
 };
 
 const list = async () => {
 	if (!fs.existsSync(TODO_FILE)) {
-		console.log("Arquivo todo.md não encontrado.");
+		console.log("Arquivo todo.md não encontrado.\n");
 		return;
 	}
 
@@ -41,7 +41,7 @@ const list = async () => {
 		.filter((line) => line.includes("- [ ]") || line.includes("- [x]"));
 
 	if (tasks.length === 0) {
-		console.log("Nenhuma tarefa encontrada.");
+		console.log("Nenhuma tarefa encontrada.\n");
 		return;
 	}
 
@@ -55,7 +55,15 @@ const list = async () => {
 		{
 			type: "checkbox",
 			name: "tasksDone",
-			message: "Selecione as tarefas concluídas:",
+			message: "Selecione as tarefas concluídas:\n",
+			theme: {
+				icon: {
+					checked: " [x]",
+					unchecked: " [ ]",
+					cursor: ">",
+				},
+			},
+			instructions: false,
 			choices,
 		},
 	]);
@@ -63,7 +71,7 @@ const list = async () => {
 	const updatedTasks = answers.tasksDone;
 
 	if (updatedTasks.length <= 0) {
-		return console.log("Nenhum tarefa concluída");
+		return console.log("Nenhum tarefa concluída\n");
 	}
 
 	choices.map((task) => {
@@ -78,12 +86,12 @@ const list = async () => {
 		fs.writeFileSync(TODO_FILE, newContent);
 	});
 
-	console.log(`${updatedTasks.length} tarefas concluídas`);
+	console.log(`${updatedTasks.length} tarefas concluídas\n`);
 };
 
 const removeTasks = async () => {
 	if (!fs.existsSync(TODO_FILE)) {
-		console.log("Arquivo todo.md não encontrado.");
+		console.log("Arquivo todo.md não encontrado.\n");
 		return;
 	}
 
@@ -94,7 +102,7 @@ const removeTasks = async () => {
 		.filter((line) => line.includes("- [ ]") || line.includes("- [x]"));
 
 	if (tasks.length === 0) {
-		console.log("Nenhuma tarefa encontrada.");
+		console.log("Nenhuma tarefa encontrada.\n");
 		return;
 	}
 
@@ -107,7 +115,15 @@ const removeTasks = async () => {
 		{
 			type: "checkbox",
 			name: "taskToRemove",
-			message: "Selecione as tarefas a serem removidas:",
+			message: "Selecione as tarefas a serem removidas:\n",
+			theme: {
+				icon: {
+					checked: " [x]",
+					unchecked: " [ ]",
+					cursor: ">",
+				},
+			},
+			instructions: false,
 			choices,
 		},
 	]);
@@ -115,7 +131,7 @@ const removeTasks = async () => {
 	const updatedTasks = answers.taskToRemove;
 
 	if (updatedTasks.length <= 0) {
-		return console.log("Nenhum tarefa removida");
+		return console.log("Nenhum tarefa removida\n");
 	}
 
 	choices.map((task) => {
@@ -127,11 +143,12 @@ const removeTasks = async () => {
 		}
 	});
 
-	console.log(`${updatedTasks.length} tarefas removidas`);
+	console.log(`${updatedTasks.length} tarefas removidas\n`);
 };
 
-// Definir os comandos do yargs
 yargs(hideBin(process.argv))
+	.scriptName("todo")
+	.demandCommand()
 	.command({
 		command: "add",
 		describe: "Adicionar uma tarefa",
@@ -144,6 +161,7 @@ yargs(hideBin(process.argv))
 		command: "ls",
 		describe: "Listar todas as tarefas",
 		handler() {
+			console.clear();
 			createTodoFile();
 			list();
 		},
@@ -152,8 +170,14 @@ yargs(hideBin(process.argv))
 		command: "rm",
 		describe: "Remover tarefas",
 		handler() {
+			console.clear();
 			createTodoFile();
 			removeTasks();
 		},
 	})
+	.version("v1.0.0")
+	.help()
+	.alias("-h", "help")
+	.wrap(null)
+	.showHelpOnFail(true, " ")
 	.parse();
