@@ -8,7 +8,8 @@
 	},
 	"scripts": {
 		"build": "bun build src/index.ts --outdir ./dist --minify --target bun",
-		"dev": "bun run src/index.ts"
+		"dev": "bun run src/index.ts",
+		"prod": "bun run build && bun link"
 	},
 	"devDependencies": {
 		"@types/bun": "latest",
