@@ -1,6 +1,6 @@
 {
-	"name": "todo-cli",
-	"module": "index.ts",
+	"name": "todo",
+	"module": "todo.ts",
 	"type": "module",
 	"bin": {
 		"todo": "./dist/todo.js"

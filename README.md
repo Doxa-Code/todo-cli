@@ -6,7 +6,7 @@ bun install
 ```
 ### Build CLI
 ```bash
-bun build
+bun run build
 ```
 ### Link CLI
 ```bash
