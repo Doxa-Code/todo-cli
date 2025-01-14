@@ -51,6 +51,8 @@ const list = async () => {
 		checked: task.includes("- [x]"),
 	}));
 
+	console.clear();
+
 	const answers: { tasksDone: string[] } = await inquirer.prompt([
 		{
 			type: "checkbox",
@@ -111,6 +113,8 @@ const removeTasks = async () => {
 		value: task,
 	}));
 
+	console.clear();
+
 	const answers: { taskToRemove: string[] } = await inquirer.prompt([
 		{
 			type: "checkbox",
@@ -161,7 +165,6 @@ yargs(hideBin(process.argv))
 		command: "ls",
 		describe: "Listar todas as tarefas",
 		handler() {
-			console.clear();
 			createTodoFile();
 			list();
 		},
@@ -170,7 +173,6 @@ yargs(hideBin(process.argv))
 		command: "rm",
 		describe: "Remover tarefas",
 		handler() {
-			console.clear();
 			createTodoFile();
 			removeTasks();
 		},

@@ -3,7 +3,8 @@
 	"module": "todo.ts",
 	"type": "module",
 	"bin": {
-		"todo": "./dist/todo.js"
+		"todo": "./dist/todo.js",
+		"t": "./dist/todo.js"
 	},
 	"scripts": {
 		"build": "bun build todo.ts --outdir ./dist --minify --target bun"
