@@ -1,10 +1,8 @@
-import { resolve } from "node:path";
 import { Database } from "beta.db";
 import inquirer from "inquirer";
 import { Task } from "./task";
 
 export class TodoService {
-	private TODO_FILE = resolve(`${process.cwd()}/todo.md`);
 	private database = new Database("todos.json");
 
 	private fetchAllTodo() {
