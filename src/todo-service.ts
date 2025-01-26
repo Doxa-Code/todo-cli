@@ -68,7 +68,7 @@ export class TodoService {
 		const choices = Array.from(tasks.values())
 			.sort((ta, tb) => (ta.priority > tb.priority ? 1 : -1))
 			.map((task) => ({
-				name: `${task.status === "done" ? "✅" : "⬜"} ${task.title} ${this.PRIORIRIES[task.priority]}`,
+				name: `${task.status === "done" ? "✅" : "⬜"} ${task.title} ${this.PRIORIRIES[task.priority] || ""}`,
 				value: task.id,
 			}));
 
