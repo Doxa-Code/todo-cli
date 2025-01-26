@@ -1,7 +1,20 @@
 {
-    "ff71920e-ee32-43c9-9f3c-c3c3861399b5": {
-        "id": "ff71920e-ee32-43c9-9f3c-c3c3861399b5",
+    "ac963d0a-30d8-4144-9815-b57243ac7d7a": {
+        "id": "ac963d0a-30d8-4144-9815-b57243ac7d7a",
         "title": "teste",
-        "status": "done"
+        "status": "done",
+        "priority": 4
+    },
+    "a20d7f54-9c58-4b11-8eba-9bbccee78dc0": {
+        "id": "a20d7f54-9c58-4b11-8eba-9bbccee78dc0",
+        "title": "asdalsjdlaksj",
+        "status": "done",
+        "priority": 1
+    },
+    "9b64e88b-6844-4a52-98b2-7ae2e3ff4d2a": {
+        "id": "9b64e88b-6844-4a52-98b2-7ae2e3ff4d2a",
+        "title": "adskajsl;dkajs",
+        "status": "done",
+        "priority": 3
     }
 }

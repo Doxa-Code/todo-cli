@@ -4,6 +4,12 @@ import { Task } from "./task";
 
 export class TodoService {
 	private database = new Database("todos.json");
+	private PRIORIRIES = {
+		1: "🔥",
+		2: "🚨",
+		3: "📤",
+		4: "🗑️",
+	};
 
 	private fetchAllTodo() {
 		const tasks = new Map<string, Task>();
@@ -13,15 +19,34 @@ export class TodoService {
 		return tasks;
 	}
 
-	addTask(title: string) {
-		if (!title) {
-			console.log("Por favor, forneça uma tarefa para adicionar.\n");
-			return;
-		}
+	async addTask(callback?: () => Promise<void>) {
+		const response = await inquirer.prompt([
+			{
+				type: "input",
+				message: "Descrição: ",
+				name: "title",
+			},
+			{
+				type: "list",
+				message: "Prioridade: ",
+				name: "priority",
+				choices: [
+					{ name: "🔥 Prioridade 1", value: 1 },
+					{ name: "🚨 Prioridade 2", value: 2 },
+					{ name: "📤 Prioridade 3", value: 3 },
+					{ name: "🗑️  Prioridade 4", value: 4 },
+				],
+			},
+		]);
 
-		const task = Task.create(title);
+		const task = Task.create(response.title, response.priority);
 
 		this.database.set(task.id, task);
+
+		if (callback) {
+			await callback();
+			return;
+		}
 
 		console.log("\n✅ Tarefa adicionada com sucesso.\n");
 	}
@@ -29,36 +54,28 @@ export class TodoService {
 	async list() {
 		const tasks = this.fetchAllTodo();
 
-		if (tasks.size === 0) {
-			console.log("Nenhuma tarefa encontrada.\n");
-			return;
-		}
-
 		console.clear();
 
 		const choices = Array.from(tasks.values())
-			.sort((ta) => (ta.status === "done" ? 1 : -1))
+			.sort((ta, tb) => (ta.priority > tb.priority ? 1 : -1))
 			.map((task) => ({
-				name: `${task.status === "done" ? "✅" : "⬜"} ${task.title}`,
+				name: `${task.status === "done" ? "✅" : "⬜"} ${task.title} ${this.PRIORIRIES[task.priority]}`,
 				value: task.id,
 			}));
 
-		const { selectedTask } = await inquirer.prompt([
+		const { selectedTask, action } = await inquirer.prompt([
 			{
 				type: "list",
 				name: "selectedTask",
 				message:
 					"Selecione uma tarefa para gerenciar (pressione Enter para escolher):",
-				choices: [...choices, { name: "Sair", value: "exit" }],
+				choices: [
+					{ name: "Adicionar tarefa", value: "new" },
+					...choices,
+					{ name: "Sair", value: "exit" },
+				],
+				loop: false,
 			},
-		]);
-
-		if (selectedTask === "exit") {
-			console.log("Feito");
-			return;
-		}
-
-		const { action } = await inquirer.prompt([
 			{
 				type: "list",
 				name: "action",
@@ -69,8 +86,21 @@ export class TodoService {
 					{ name: "Remover ❌", value: "remove" },
 					{ name: "Voltar", value: "cancel" },
 				],
+				when({ selectedTask }) {
+					return selectedTask !== "exit" && selectedTask !== "new";
+				},
 			},
 		]);
+
+		if (selectedTask === "new") {
+			this.addTask(this.list.bind(this));
+			return;
+		}
+
+		if (selectedTask === "exit") {
+			console.log("\n✅ Feito\n");
+			return;
+		}
 
 		switch (action) {
 			case "complete": {

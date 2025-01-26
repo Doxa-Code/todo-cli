@@ -12,8 +12,8 @@ yargs(hideBin(process.argv))
 	.command({
 		command: "add",
 		describe: "Adicionar uma tarefa",
-		handler(argv) {
-			todoService.addTask(argv._.slice(1).join(" "));
+		handler() {
+			todoService.addTask();
 		},
 	})
 	.command({
