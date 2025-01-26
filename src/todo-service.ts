@@ -19,17 +19,19 @@ export class TodoService {
 		return tasks;
 	}
 
-	async addTask(callback?: () => Promise<void>) {
+	async addTask(callback?: () => Promise<void>, taskToEdit?: Task) {
 		const response = await inquirer.prompt([
 			{
 				type: "input",
 				message: "Descrição: ",
 				name: "title",
+				default: taskToEdit?.title || "",
 			},
 			{
 				type: "list",
 				message: "Prioridade: ",
 				name: "priority",
+				default: taskToEdit?.priority || undefined,
 				choices: [
 					{ name: "🔥 Prioridade 1", value: 1 },
 					{ name: "🚨 Prioridade 2", value: 2 },
@@ -39,7 +41,14 @@ export class TodoService {
 			},
 		]);
 
-		const task = Task.create(response.title, response.priority);
+		const task = taskToEdit
+			? Task.instance({
+					id: taskToEdit.id,
+					priority: response.priority,
+					status: taskToEdit.status,
+					title: taskToEdit.title,
+				})
+			: Task.create(response.title, response.priority);
 
 		this.database.set(task.id, task);
 
@@ -83,6 +92,7 @@ export class TodoService {
 				choices: [
 					{ name: "Concluído ✅", value: "complete" },
 					{ name: "Inbox 📥", value: "inbox" },
+					{ name: "Editar 📝", value: "edit" },
 					{ name: "Remover ❌", value: "remove" },
 					{ name: "Voltar", value: "cancel" },
 				],
@@ -94,6 +104,12 @@ export class TodoService {
 
 		if (selectedTask === "new") {
 			this.addTask(this.list.bind(this));
+			return;
+		}
+
+		if (action === "edit") {
+			const task = tasks.get(selectedTask);
+			this.addTask(this.list.bind(this), task);
 			return;
 		}
 
