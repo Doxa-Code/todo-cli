@@ -1,150 +1,115 @@
-import fs from "node:fs";
 import { resolve } from "node:path";
+import { Database } from "beta.db";
 import inquirer from "inquirer";
-import type { Task } from "./task";
+import { Task } from "./task";
 
 export class TodoService {
 	private TODO_FILE = resolve(`${process.cwd()}/todo.md`);
+	private database = new Database("todos.json");
 
-	constructor() {
-		if (!fs.existsSync(this.TODO_FILE)) {
-			fs.writeFileSync(this.TODO_FILE, "# Todo`s\n\n");
-			console.log("Arquivo todo.md criado.\n");
-		}
+	private fetchAllTodo() {
+		const tasks = new Map<string, Task>();
+		Object.entries(this.database.all()).map(([id, task]) =>
+			tasks.set(id, Task.instance(task)),
+		);
+		return tasks;
 	}
 
-	addTask(task: Task) {
-		if (!task) {
+	addTask(title: string) {
+		if (!title) {
 			console.log("Por favor, forneça uma tarefa para adicionar.\n");
 			return;
 		}
 
-		const tasks = fs
-			.readFileSync(this.TODO_FILE, "utf-8")
-			.split("\n")
-			.filter((line) => line.includes("- [ ]") || line.includes("- [x]"))
-			.map((task) => task.replace("- [ ] ", "").replace("- [x] ", ""));
+		const task = Task.create(title);
 
-		if (tasks.includes(task.title)) {
-			console.log("\nTarefa já adicionada!\n");
-			return;
-		}
+		this.database.set(task.id, task);
 
-		fs.appendFileSync(this.TODO_FILE, `- [ ] ${task.title}\n`);
-
-		console.log(`Tarefa '${task.title}' adicionada com sucesso.\n`);
+		console.log("Tarefa adicionada com sucesso.\n");
 	}
 
 	async list() {
-		const tasks = fs
-			.readFileSync(this.TODO_FILE, "utf-8")
-			.split("\n")
-			.filter((line) => line.includes("- [ ]") || line.includes("- [x]"));
+		const tasks = this.fetchAllTodo();
 
-		if (tasks.length === 0) {
+		if (tasks.size === 0) {
 			console.log("Nenhuma tarefa encontrada.\n");
 			return;
 		}
 
-		const choices = tasks.map((task) => ({
-			name: task.replace("- [ ] ", "").replace("- [x] ", ""),
-			value: task,
-			checked: task.includes("- [x]"),
-		}));
-
 		console.clear();
 
-		const answers: { tasksDone: string[] } = await inquirer.prompt([
+		const choices = Array.from(tasks.values())
+			.sort((ta) => (ta.status === "done" ? 1 : -1))
+			.map((task) => ({
+				name: `${task.status === "done" ? "✅" : "⬜"} ${task.title}`,
+				value: task.id,
+			}));
+
+		const { selectedTask } = await inquirer.prompt([
 			{
-				type: "checkbox",
-				name: "tasksDone",
-				message: "Selecione as tarefas concluídas:\n",
-				theme: {
-					icon: {
-						checked: " [x]",
-						unchecked: " [ ]",
-						cursor: ">",
-					},
-				},
-				instructions: false,
-				choices,
+				type: "list",
+				name: "selectedTask",
+				message:
+					"Selecione uma tarefa para gerenciar (pressione Enter para escolher):",
+				choices: [...choices, { name: "Sair", value: "exit" }],
 			},
 		]);
 
-		const updatedTasks = answers.tasksDone;
-
-		choices.map((task) => {
-			const taskDone = updatedTasks.includes(task.value);
-
-			const updatedTask = taskDone
-				? task.value.replace("- [ ]", "- [x]")
-				: task.value.replace("- [x]", "- [ ]");
-
-			const fileContent = fs.readFileSync(this.TODO_FILE, "utf-8");
-			const newContent = fileContent.replace(task.value, updatedTask);
-			fs.writeFileSync(this.TODO_FILE, newContent);
-		});
-
-		console.log(`${updatedTasks.length} tarefas concluídas\n`);
-	}
-
-	async removeTask() {
-		if (!fs.existsSync(this.TODO_FILE)) {
-			console.log("Arquivo todo.md não encontrado.\n");
+		if (selectedTask === "exit") {
+			console.log("Feito");
 			return;
 		}
 
-		// Lê o conteúdo do arquivo e encontra as tarefas pendentes
-		const tasks = fs
-			.readFileSync(this.TODO_FILE, "utf-8")
-			.split("\n")
-			.filter((line) => line.includes("- [ ]") || line.includes("- [x]"));
-
-		if (tasks.length === 0) {
-			console.log("Nenhuma tarefa encontrada.\n");
-			return;
-		}
-
-		const choices = tasks.map((task) => ({
-			name: task.replace("- [ ] ", "").replace("- [x] ", ""),
-			value: task,
-		}));
-
-		console.clear();
-
-		const answers: { taskToRemove: string[] } = await inquirer.prompt([
+		const { action } = await inquirer.prompt([
 			{
-				type: "checkbox",
-				name: "taskToRemove",
-				message: "Selecione as tarefas a serem removidas:\n",
-				theme: {
-					icon: {
-						checked: " x",
-						unchecked: " -",
-						cursor: ">",
-					},
-				},
-				instructions: false,
-				choices,
+				type: "list",
+				name: "action",
+				message: "",
+				choices: [
+					{ name: "Concluído ✅", value: "complete" },
+					{ name: "Inbox 📥", value: "inbox" },
+					{ name: "Remover ❌", value: "remove" },
+					{ name: "Voltar", value: "cancel" },
+				],
 			},
 		]);
 
-		const updatedTasks = answers.taskToRemove;
+		switch (action) {
+			case "complete": {
+				const task = tasks.get(selectedTask);
 
-		if (updatedTasks.length <= 0) {
-			return console.log("Nenhum tarefa removida\n");
-		}
+				if (!task) break;
 
-		choices.map((task) => {
-			const taskRemove = updatedTasks.includes(task.value);
-			if (taskRemove) {
-				const fileContent = fs.readFileSync(this.TODO_FILE, "utf-8");
-				const newContent = fileContent.replace(`\n${task.value}`, "");
-				fs.writeFileSync(this.TODO_FILE, newContent);
+				task.done();
+
+				this.database.set(task.id, task);
+				this.list();
+
+				break;
 			}
-		});
 
-		console.log(`${updatedTasks.length} tarefas removidas\n`);
+			case "inbox": {
+				const task = tasks.get(selectedTask);
+
+				if (!task) break;
+
+				task.inbox();
+
+				this.database.set(task.id, task);
+				this.list();
+
+				break;
+			}
+
+			case "remove": {
+				this.database.deleteEach(selectedTask);
+				this.list();
+				break;
+			}
+			case "cancel":
+				this.list();
+				break;
+		}
 	}
 
 	static create() {

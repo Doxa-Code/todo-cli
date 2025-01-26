@@ -1,5 +1,6 @@
 {
 	"name": "todo",
+	"version": "1.0.0",
 	"module": "todo.ts",
 	"type": "module",
 	"bin": {
@@ -25,6 +26,7 @@
 		}
 	},
 	"dependencies": {
+		"beta.db": "^3.0.2",
 		"inquirer": "^12.3.2",
 		"yargs": "^17.7.2"
 	}
