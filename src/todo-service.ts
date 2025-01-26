@@ -23,7 +23,7 @@ export class TodoService {
 
 		this.database.set(task.id, task);
 
-		console.log("Tarefa adicionada com sucesso.\n");
+		console.log("\n✅ Tarefa adicionada com sucesso.\n");
 	}
 
 	async list() {
